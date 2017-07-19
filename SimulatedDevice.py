@@ -31,6 +31,7 @@ AVG_WIND_SPEED = 10.0
 MIN_TEMPERATURE = 20.0
 MIN_HUMIDITY = 60.0
 MESSAGE_COUNT = 0
+MESSAGE_SWITCH = True
 RECEIVED_COUNT = 0
 TWIN_CONTEXT = 0
 SEND_REPORTED_STATE_CONTEXT = 0
@@ -96,13 +97,23 @@ def send_reported_state_callback(status_code, user_context):
 
 
 def device_method_callback(method_name, payload, user_context):
-    global METHOD_CALLBACKS
+    global METHOD_CALLBACKS,MESSAGE_SWITCH
     print ( "\nMethod callback called with:\nmethodName = %s\npayload = %s\ncontext = %s" % (method_name, payload, user_context) )
     METHOD_CALLBACKS += 1
     print ( "Total calls confirmed: %d\n" % METHOD_CALLBACKS )
     device_method_return_value = DeviceMethodReturnValue()
     device_method_return_value.response = "{ \"Response\": \"This is the response from the device\" }"
     device_method_return_value.status = 200
+    if method_name == "start":
+        MESSAGE_SWITCH = True
+        print ( "Start sending message\n" )
+        device_method_return_value.response = "{ \"Response\": \"Successfully started\" }"
+        return device_method_return_value
+    if method_name == "stop":
+        MESSAGE_SWITCH = False
+        print ( "Stop sending message\n" )
+        device_method_return_value.response = "{ \"Response\": \"Successfully stopped\" }"
+        return device_method_return_value
     return device_method_return_value
 
 
@@ -158,34 +169,35 @@ def iothub_client_sample_run():
             client.send_reported_state(reported_state, len(reported_state), send_reported_state_callback, SEND_REPORTED_STATE_CONTEXT)
 
         while True:
-            global MESSAGE_COUNT
-            # send a few messages every minute
-            print ( "IoTHubClient sending %d messages" % MESSAGE_COUNT )
+            global MESSAGE_COUNT,MESSAGE_SWITCH
+            if MESSAGE_SWITCH:
+                # send a few messages every minute
+                print ( "IoTHubClient sending %d messages" % MESSAGE_COUNT )
 
-            temperature = MIN_TEMPERATURE + (random.random() * 10)
-            humidity = MIN_HUMIDITY + (random.random() * 20)
-            msg_txt_formatted = MSG_TXT % (
-                AVG_WIND_SPEED + (random.random() * 4 + 2),
-                temperature,
-                humidity)
-            message = IoTHubMessage(msg_txt_formatted)
-            # optional: assign ids
-            message.message_id = "message_%d" % MESSAGE_COUNT
-            message.correlation_id = "correlation_%d" % MESSAGE_COUNT
-            # optional: assign properties
-            prop_map = message.properties()
-            prop_map.add("temperatureAlert", 'true' if temperature > 28 else 'false')
+                temperature = MIN_TEMPERATURE + (random.random() * 10)
+                humidity = MIN_HUMIDITY + (random.random() * 20)
+                msg_txt_formatted = MSG_TXT % (
+                    AVG_WIND_SPEED + (random.random() * 4 + 2),
+                    temperature,
+                    humidity)
+                message = IoTHubMessage(msg_txt_formatted)
+                # optional: assign ids
+                message.message_id = "message_%d" % MESSAGE_COUNT
+                message.correlation_id = "correlation_%d" % MESSAGE_COUNT
+                # optional: assign properties
+                prop_map = message.properties()
+                prop_map.add("temperatureAlert", 'true' if temperature > 28 else 'false')
 
-            client.send_event_async(message, send_confirmation_callback, MESSAGE_COUNT)
-            print ( "IoTHubClient.send_event_async accepted message [%d] for transmission to IoT Hub." % MESSAGE_COUNT )
+                client.send_event_async(message, send_confirmation_callback, MESSAGE_COUNT)
+                print ( "IoTHubClient.send_event_async accepted message [%d] for transmission to IoT Hub." % MESSAGE_COUNT )
 
-            # Wait for Commands or exit
-            print ( "IoTHubClient waiting for commands, press Ctrl-C to exit" )
+                # Wait for Commands or exit
+                print ( "IoTHubClient waiting for commands, press Ctrl-C to exit" )
 
-            status = client.get_send_status()
-            print ( "Send status: %s" % status )
+                status = client.get_send_status()
+                print ( "Send status: %s" % status )
+                MESSAGE_COUNT += 1
             time.sleep(config.MESSAGE_TIMESPAN)
-            MESSAGE_COUNT += 1
 
     except IoTHubError as iothub_error:
         print ( "Unexpected error %s from IoTHub" % iothub_error )
