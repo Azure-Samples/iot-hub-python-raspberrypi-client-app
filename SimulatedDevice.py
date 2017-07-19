@@ -11,6 +11,7 @@ import iothub_client
 from iothub_client import IoTHubClient, IoTHubClientError, IoTHubTransportProvider, IoTHubClientResult
 from iothub_client import IoTHubMessage, IoTHubMessageDispositionResult, IoTHubError, DeviceMethodReturnValue
 import config as config
+from BME280Sensor import BME280Sensor
 
 # HTTP options
 # Because it can poll "after 9 seconds" polls will happen effectively
@@ -52,7 +53,7 @@ PROTOCOL = IoTHubTransportProvider.MQTT
 # "HostName=<host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"
 CONNECTION_STRING = "HostName=iot-mj.azure-devices.net;DeviceId=py;SharedAccessKey=hiFkSQKQob9MD8H0VSpsFq19XguGHO8bx53rk1IFKy4="
 
-MSG_TXT = "{\"deviceId\": \"myPythonDevice\",\"windSpeed\": %.2f,\"temperature\": %.2f,\"humidity\": %.2f}"
+MSG_TXT = "{\"deviceId\": \"myPythonDevice\",\"pressure\": %s,\"temperature\": %s,\"humidity\": %s}"
 
 
 def receive_message_callback(message, counter):
@@ -168,18 +169,22 @@ def iothub_client_sample_run():
             reported_state = "{\"newState\":\"standBy\"}"
             client.send_reported_state(reported_state, len(reported_state), send_reported_state_callback, SEND_REPORTED_STATE_CONTEXT)
 
+        sensor = BME280Sensor(config.SIMULATED_DATA)
         while True:
             global MESSAGE_COUNT,MESSAGE_SWITCH
             if MESSAGE_SWITCH:
                 # send a few messages every minute
                 print ( "IoTHubClient sending %d messages" % MESSAGE_COUNT )
-
-                temperature = MIN_TEMPERATURE + (random.random() * 10)
-                humidity = MIN_HUMIDITY + (random.random() * 20)
+                temperature = sensor.read_temperature()
+                humidity = sensor.read_humidity()
+                pressure = sensor.read_pressure()
+                #temperature = MIN_TEMPERATURE + (random.random() * 10)
+                #humidity = MIN_HUMIDITY + (random.random() * 20)
                 msg_txt_formatted = MSG_TXT % (
-                    AVG_WIND_SPEED + (random.random() * 4 + 2),
+                    pressure,
                     temperature,
                     humidity)
+                print msg_txt_formatted
                 message = IoTHubMessage(msg_txt_formatted)
                 # optional: assign ids
                 message.message_id = "message_%d" % MESSAGE_COUNT
@@ -192,7 +197,7 @@ def iothub_client_sample_run():
                 print ( "IoTHubClient.send_event_async accepted message [%d] for transmission to IoT Hub." % MESSAGE_COUNT )
 
                 # Wait for Commands or exit
-                print ( "IoTHubClient waiting for commands, press Ctrl-C to exit" )
+                # print ( "IoTHubClient waiting for commands, press Ctrl-C to exit" )
 
                 status = client.get_send_status()
                 print ( "Send status: %s" % status )
