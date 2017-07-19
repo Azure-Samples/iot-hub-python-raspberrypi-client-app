@@ -10,7 +10,7 @@ import sys
 import iothub_client
 from iothub_client import IoTHubClient, IoTHubClientError, IoTHubTransportProvider, IoTHubClientResult
 from iothub_client import IoTHubMessage, IoTHubMessageDispositionResult, IoTHubError, DeviceMethodReturnValue
-from iothub_client_args import get_iothub_opt, OptionError
+import config as config
 
 # HTTP options
 # Because it can poll "after 9 seconds" polls will happen effectively
@@ -30,7 +30,6 @@ RECEIVE_CONTEXT = 0
 AVG_WIND_SPEED = 10.0
 MIN_TEMPERATURE = 20.0
 MIN_HUMIDITY = 60.0
-MESSAGE_TIMESPAN = 2
 MESSAGE_COUNT = 0
 RECEIVED_COUNT = 0
 TWIN_CONTEXT = 0
@@ -53,17 +52,6 @@ PROTOCOL = IoTHubTransportProvider.MQTT
 CONNECTION_STRING = "HostName=iot-mj.azure-devices.net;DeviceId=py;SharedAccessKey=hiFkSQKQob9MD8H0VSpsFq19XguGHO8bx53rk1IFKy4="
 
 MSG_TXT = "{\"deviceId\": \"myPythonDevice\",\"windSpeed\": %.2f,\"temperature\": %.2f,\"humidity\": %.2f}"
-
-# some embedded platforms need certificate information
-
-
-def set_certificates(client):
-    from iothub_client_cert import CERTIFICATES
-    try:
-        client.set_option("TrustedCerts", CERTIFICATES)
-        print ( "set_option TrustedCerts successful" )
-    except IoTHubClientError as iothub_client_error:
-        print ( "set_option TrustedCerts failed (%s)" % iothub_client_error )
 
 
 def receive_message_callback(message, counter):
@@ -133,8 +121,6 @@ def iothub_client_init():
         client.set_option("MinimumPollingTime", MINIMUM_POLLING_TIME)
     # set the time until a message times out
     client.set_option("messageTimeout", MESSAGE_TIMEOUT)
-    # some embedded platforms need certificate information
-    set_certificates(client)
     # to enable MQTT logging set to 1
     if client.protocol == IoTHubTransportProvider.MQTT:
         client.set_option("logtrace", 0)
@@ -198,7 +184,7 @@ def iothub_client_sample_run():
 
             status = client.get_send_status()
             print ( "Send status: %s" % status )
-            time.sleep(MESSAGE_TIMESPAN)
+            time.sleep(config.MESSAGE_TIMESPAN)
             MESSAGE_COUNT += 1
 
     except IoTHubError as iothub_error:
@@ -219,16 +205,5 @@ def usage():
 if __name__ == '__main__':
     print ( "\nPython %s" % sys.version )
     print ( "IoT Hub Client for Python" )
-
-    try:
-        (CONNECTION_STRING, PROTOCOL) = get_iothub_opt(sys.argv[1:], CONNECTION_STRING, PROTOCOL)
-    except OptionError as option_error:
-        print ( option_error )
-        usage()
-        sys.exit(1)
-
-    print ( "Starting the IoT Hub Python sample..." )
-    print ( "    Protocol %s" % PROTOCOL )
-    print ( "    Connection string=%s" % CONNECTION_STRING )
 
     iothub_client_sample_run()
