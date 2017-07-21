@@ -4,14 +4,14 @@ from smbus2 import SMBus
 
 class BME280Sensor:
 
-    def __init__(self, simulated_data):
+    def __init__(self, simulated_data, i2c_address):
         self.simulated_data = simulated_data
         if simulated_data == True:
-            print "Use simulated data."
+            print ( "Use simulated data." )
         else:
-            print "Use real world data."
+            print ( "Use real world data." )
             bus_number = 1
-            self.__i2c_address = 0x76
+            self.__i2c_address = i2c_address
             self.__dig_temperature = []
             self.__dig_pressure = []
             self.__dig_humidity = []
@@ -34,7 +34,8 @@ class BME280Sensor:
             return "%.2f" % random.uniform(20, 30)
         else:
             data = []
-            for i in range(0xF7, 0xF7 + 8):
+            base_address = 0xF7
+            for i in range(base_address, base_address + 8):
                 data.append(self.__bus.read_byte_data(self.__i2c_address, i))
             hum_raw = (data[6] << 8) | data[7]
             return self.__compensate_humidity(hum_raw)
@@ -44,7 +45,8 @@ class BME280Sensor:
             return "%.2f" % random.uniform(800, 1200)
         else:
             data = []
-            for i in range(0xF7, 0xF7 + 8):
+            base_address = 0xF7
+            for i in range(base_address, base_address + 8):
                 data.append(self.__bus.read_byte_data(self.__i2c_address, i))
             pres_raw = (data[0] << 12) | (data[1] << 4) | (data[2] >> 4)
             return self.__compensate_pressure(pres_raw)
@@ -54,8 +56,8 @@ class BME280Sensor:
 
     def __get_calib_param(self):
         calib = []
-
-        for i in range(0x88, 0x88 + 24):
+        base_address = 0x88
+        for i in range(base_address, base_address + 24):
             calib.append(self.__bus.read_byte_data(self.__i2c_address, i))
         calib.append(self.__bus.read_byte_data(self.__i2c_address, 0xA1))
         for i in range(0xE1, 0xE1 + 7):

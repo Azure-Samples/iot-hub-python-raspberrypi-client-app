@@ -7,7 +7,6 @@
 import random
 import time
 import sys
-import iothub_client
 from iothub_client import IoTHubClient, IoTHubClientError, IoTHubTransportProvider, IoTHubClientResult
 from iothub_client import IoTHubMessage, IoTHubMessageDispositionResult, IoTHubError, DeviceMethodReturnValue
 import config as config
@@ -51,9 +50,13 @@ PROTOCOL = IoTHubTransportProvider.MQTT
 
 # String containing Hostname, Device Id & Device Key in the format:
 # "HostName=<host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"
-CONNECTION_STRING = "HostName=iot-mj.azure-devices.net;DeviceId=py;SharedAccessKey=hiFkSQKQob9MD8H0VSpsFq19XguGHO8bx53rk1IFKy4="
+if len(sys.argv) < 2:
+    print ( "You need to provide the device connection string as command line arguments." )
+    sys.exit(0)
 
-MSG_TXT = "{\"deviceId\": \"myPythonDevice\",\"pressure\": %s,\"temperature\": %s,\"humidity\": %s}"
+CONNECTION_STRING = sys.argv[1]
+
+MSG_TXT = "{\"deviceId\": \"new-device\",\"pressure\": %s,\"temperature\": %s,\"humidity\": %s}"
 
 
 def receive_message_callback(message, counter):
@@ -159,9 +162,7 @@ def print_last_message_time(client):
 
 
 def iothub_client_sample_run():
-
     try:
-
         client = iothub_client_init()
 
         if client.protocol == IoTHubTransportProvider.MQTT:
@@ -169,7 +170,7 @@ def iothub_client_sample_run():
             reported_state = "{\"newState\":\"standBy\"}"
             client.send_reported_state(reported_state, len(reported_state), send_reported_state_callback, SEND_REPORTED_STATE_CONTEXT)
 
-        sensor = BME280Sensor(config.SIMULATED_DATA)
+        sensor = BME280Sensor(config.SIMULATED_DATA, config.I2C_ADDRESS)
         while True:
             global MESSAGE_COUNT,MESSAGE_SWITCH
             if MESSAGE_SWITCH:
