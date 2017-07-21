@@ -11,6 +11,7 @@ from iothub_client import IoTHubClient, IoTHubClientError, IoTHubTransportProvid
 from iothub_client import IoTHubMessage, IoTHubMessageDispositionResult, IoTHubError, DeviceMethodReturnValue
 import config as config
 from BME280Sensor import BME280Sensor
+import RPi.GPIO as GPIO
 
 # HTTP options
 # Because it can poll "after 9 seconds" polls will happen effectively
@@ -58,6 +59,8 @@ CONNECTION_STRING = sys.argv[1]
 
 MSG_TXT = "{\"deviceId\": \"new-device\",\"pressure\": %s,\"temperature\": %s,\"humidity\": %s}"
 
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(config.GPIO_PIN_ADDRESS, GPIO.OUT)
 
 def receive_message_callback(message, counter):
     global RECEIVE_CALLBACKS
@@ -84,6 +87,7 @@ def send_confirmation_callback(message, result, user_context):
     print ( "    Properties: %s" % key_value_pair )
     SEND_CALLBACKS += 1
     print ( "    Total calls confirmed: %d" % SEND_CALLBACKS )
+    LEDBlink()
 
 
 def device_twin_callback(update_state, payload, user_context):
@@ -179,8 +183,6 @@ def iothub_client_sample_run():
                 temperature = sensor.read_temperature()
                 humidity = sensor.read_humidity()
                 pressure = sensor.read_pressure()
-                #temperature = MIN_TEMPERATURE + (random.random() * 10)
-                #humidity = MIN_HUMIDITY + (random.random() * 20)
                 msg_txt_formatted = MSG_TXT % (
                     pressure,
                     temperature,
@@ -197,9 +199,6 @@ def iothub_client_sample_run():
                 client.send_event_async(message, send_confirmation_callback, MESSAGE_COUNT)
                 print ( "IoTHubClient.send_event_async accepted message [%d] for transmission to IoT Hub." % MESSAGE_COUNT )
 
-                # Wait for Commands or exit
-                # print ( "IoTHubClient waiting for commands, press Ctrl-C to exit" )
-
                 status = client.get_send_status()
                 print ( "Send status: %s" % status )
                 MESSAGE_COUNT += 1
@@ -213,6 +212,10 @@ def iothub_client_sample_run():
 
     print_last_message_time(client)
 
+def LEDBlink():
+    GPIO.output(config.GPIO_PIN_ADDRESS, GPIO.HIGH)
+    time.sleep(config.BLINK_TIMESPAN)
+    GPIO.output(config.GPIO_PIN_ADDRESS, GPIO.LOW)
 
 def usage():
     print ( "Usage: iothub_client_sample.py -p <protocol> -c <connectionstring>" )
