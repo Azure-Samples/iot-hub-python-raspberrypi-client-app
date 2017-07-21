@@ -4,26 +4,26 @@
 
 This repo contains a python application that runs on Raspberry Pi 3 with a BME280 temperature&humidity sensor, and then sends these data to your IoT hub. At the same time, this application receives Cloud-to-Device messages from your IoT hub, and takes actions according to the C2D command. 
 
-## Set up your Pi
+## Step 1: Set up your Pi
 ### Enable SSH on your Pi
 Follow [this page](https://www.raspberrypi.org/documentation/remote-access/ssh/) to enable SSH on your Pi.
 
 ### Enable SPI and I2C on your Pi
 Follow [this page](https://www.raspberrypi.org/documentation/configuration/raspi-config.md) to enable SPI on your Pi
 
-## Connect your sensor with your Pi
+## Step 2: Connect your sensor with your Pi
 ### Connect with a physical BEM280 sensor and LED
-You can follow the image to connect your BME280 and a LED with your Raspberry Pi 3.
+You can follow the image to connect your BME280 and an LED with your Raspberry Pi 3.
 
 ![BME280](https://docs.microsoft.com/en-us/azure/iot-hub/media/iot-hub-raspberry-pi-kit-c-get-started/3_raspberry-pi-sensor-connection.png)
 
 ### DON'T HAVE A PHYSICAL BME280?
 You can use the application to simulate temperature&humidity data and send to your IoT hub.
-1. Open the `config.h` file.
+1. Open the `config.py` file.
 2. Change the `SIMULATED_DATA` value from `False` to `True`.
 
 
-## Build and Install Azure IoT SDK for Python
+## Step 3: Build Azure IoT SDK for Python
 ### Installs needed to compile the SDKs for Python from source code
 Because the Azure IoT SDKs for Python are wrappers on top of the [SDKs for C][azure-iot-sdk-c], you will need to compile the C libraries if you want or need to generate the Python libraries from source code.
 You will notice that the C SDKs are brought in as submodules to the current repository.
@@ -57,7 +57,7 @@ The Python iothub_client and iothub_service_client modules support python versio
 4. Run the `./build.sh` script.
     * Build will default to python 2.7
     * To build with python 3.4 or 3.5, run `./build.sh --build-python 3.4` or `./build.sh --build-python 3.5` respectively 
-5. After a successful build, the `iothub_client.so` Python extension module is copied to the [**device/samples**][device-samples] and [**service/samples**][service-samples] folders. Visit these folders for instructions on how to run the samples.
+5. After a successful build, the `iothub_client.so` Python extension module is copied to the [**device/samples**][device-samples] and [**service/samples**][service-samples] folders. **Please notice that the `iothub_client.so` will be used in this client application**. 
 
 ###Known build issues: 
 
@@ -67,18 +67,26 @@ The Python iothub_client and iothub_service_client modules support python versio
 
 If you run into this issue, check the **memory consumption** of the device using `free -m command` in another terminal window during that time. If you are running out of memory while compiling iothub_client_python.cpp file, you may have to temporarily increase the **swap space** to get more available memory to successfully build the Python client side device SDK library.
 
-## Run your client application
+## Step 4: Run your client application
 
-1. Clone the sample to local:
+1. Clone the client application to local:
 
    ```
    git clone https://github.com/Azure-Samples/iot-hub-python-raspberrypi-client-app.git
    
    cd ./iot-hub-python-raspberrypi-client-app
    ```
-2. Run the client application with root privilege, and you also need provide your Azure IoT hub device connection string, note your connection should be quoted in the command:
+
+2. Install GPIO library:
    ```
-   sudo python SimulatedDevice.py '<your Azure IoT hub device connection string>'
+   sudo pip install RPi.GPIO
+   ```
+
+3. Copy the `iothub_client.so` Python extension module generated in **Step 3** to this client application folder.
+
+4. Run the client application with root privilege, and you also need provide your Azure IoT hub device connection string, note your connection should be quoted in the command:
+   ```
+   sudo python app.py '<your Azure IoT hub device connection string>'
    ```
 
 If the application works normally, then you will see the screen like this:
