@@ -12,7 +12,7 @@ Follow [this page](https://www.raspberrypi.org/documentation/remote-access/ssh/)
 Follow [this page](https://www.raspberrypi.org/documentation/configuration/raspi-config.md) to enable SPI on your Pi
 
 ## Step 2: Connect your sensor with your Pi
-### Connect with a physical BEM280 sensor and LED
+### Connect with a physical BME280 sensor and LED
 You can follow the image to connect your BME280 and an LED with your Raspberry Pi 3.
 
 ![BME280](https://docs.microsoft.com/en-us/azure/iot-hub/media/iot-hub-raspberry-pi-kit-c-get-started/3_raspberry-pi-sensor-connection.png)
@@ -86,7 +86,7 @@ If you run into this issue, check the **memory consumption** of the device using
 
 4. Run the client application with root privilege, and you also need provide your Azure IoT hub device connection string, note your connection should be quoted in the command:
    ```
-   sudo python app.py '<your Azure IoT hub device connection string>'
+   python app.py '<your Azure IoT hub device connection string>'
    ```
 
 If the application works normally, then you will see the screen like this:
