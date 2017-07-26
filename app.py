@@ -10,8 +10,9 @@ import sys
 from iothub_client import IoTHubClient, IoTHubClientError, IoTHubTransportProvider, IoTHubClientResult
 from iothub_client import IoTHubMessage, IoTHubMessageDispositionResult, IoTHubError, DeviceMethodReturnValue
 import config as config
-from BME280Sensor import BME280Sensor
+from BME280SensorSimulator import BME280SensorSimulator
 import RPi.GPIO as GPIO
+from Adafruit_BME280 import *
 
 # HTTP options
 # Because it can poll "after 9 seconds" polls will happen effectively
@@ -28,15 +29,12 @@ MINIMUM_POLLING_TIME = 9
 MESSAGE_TIMEOUT = 10000
 
 RECEIVE_CONTEXT = 0
-AVG_WIND_SPEED = 10.0
-MIN_TEMPERATURE = 20.0
-MIN_HUMIDITY = 60.0
 MESSAGE_COUNT = 0
 MESSAGE_SWITCH = True
-RECEIVED_COUNT = 0
 TWIN_CONTEXT = 0
 SEND_REPORTED_STATE_CONTEXT = 0
 METHOD_CONTEXT = 0
+TEMPERATURE_ALERT = 30.0
 
 # global counters
 RECEIVE_CALLBACKS = 0
@@ -57,7 +55,7 @@ if len(sys.argv) < 2:
 
 CONNECTION_STRING = sys.argv[1]
 
-MSG_TXT = "{\"deviceId\": \"new-device\",\"pressure\": %s,\"temperature\": %s,\"humidity\": %s}"
+MSG_TXT = "{\"deviceId\": \"Raspberry Pi - Python\",\"temperature\": %f,\"humidity\": %f}"
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(config.GPIO_PIN_ADDRESS, GPIO.OUT)
@@ -87,7 +85,7 @@ def send_confirmation_callback(message, result, user_context):
     print ( "    Properties: %s" % key_value_pair )
     SEND_CALLBACKS += 1
     print ( "    Total calls confirmed: %d" % SEND_CALLBACKS )
-    LEDBlink()
+    led_blink()
 
 
 def device_twin_callback(update_state, payload, user_context):
@@ -174,7 +172,11 @@ def iothub_client_sample_run():
             reported_state = "{\"newState\":\"standBy\"}"
             client.send_reported_state(reported_state, len(reported_state), send_reported_state_callback, SEND_REPORTED_STATE_CONTEXT)
 
-        sensor = BME280Sensor(config.SIMULATED_DATA, config.I2C_ADDRESS)
+        if not config.SIMULATED_DATA:        
+            sensor = BME280(address = config.I2C_ADDRESS)
+        else:
+            sensor = BME280SensorSimulator()
+
         while True:
             global MESSAGE_COUNT,MESSAGE_SWITCH
             if MESSAGE_SWITCH:
@@ -182,9 +184,7 @@ def iothub_client_sample_run():
                 print ( "IoTHubClient sending %d messages" % MESSAGE_COUNT )
                 temperature = sensor.read_temperature()
                 humidity = sensor.read_humidity()
-                pressure = sensor.read_pressure()
                 msg_txt_formatted = MSG_TXT % (
-                    pressure,
                     temperature,
                     humidity)
                 print (msg_txt_formatted)
@@ -194,7 +194,7 @@ def iothub_client_sample_run():
                 message.correlation_id = "correlation_%d" % MESSAGE_COUNT
                 # optional: assign properties
                 prop_map = message.properties()
-                prop_map.add("temperatureAlert", 'true' if float(temperature) > 28 else 'false')
+                prop_map.add("temperatureAlert", 'true' if temperature > TEMPERATURE_ALERT else 'false')
 
                 client.send_event_async(message, send_confirmation_callback, MESSAGE_COUNT)
                 print ( "IoTHubClient.send_event_async accepted message [%d] for transmission to IoT Hub." % MESSAGE_COUNT )
@@ -202,7 +202,7 @@ def iothub_client_sample_run():
                 status = client.get_send_status()
                 print ( "Send status: %s" % status )
                 MESSAGE_COUNT += 1
-            time.sleep(config.MESSAGE_TIMESPAN)
+            time.sleep(config.MESSAGE_TIMESPAN / 1000.0)
 
     except IoTHubError as iothub_error:
         print ( "Unexpected error %s from IoTHub" % iothub_error )
@@ -212,9 +212,9 @@ def iothub_client_sample_run():
 
     print_last_message_time(client)
 
-def LEDBlink():
+def led_blink():
     GPIO.output(config.GPIO_PIN_ADDRESS, GPIO.HIGH)
-    time.sleep(config.BLINK_TIMESPAN)
+    time.sleep(config.BLINK_TIMESPAN / 1000.0)
     GPIO.output(config.GPIO_PIN_ADDRESS, GPIO.LOW)
 
 def usage():
