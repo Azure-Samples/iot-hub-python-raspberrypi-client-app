@@ -22,52 +22,7 @@ You can use the application to simulate temperature&humidity data and send to yo
 1. Open the `config.py` file.
 2. Change the `SIMULATED_DATA` value from `False` to `True`.
 
-
-## Step 3: Build Azure IoT SDK for Python
-### Installs needed to compile the SDKs for Python from source code
-Because the Azure IoT SDKs for Python are wrappers on top of the [SDKs for C][azure-iot-sdk-c], you will need to compile the C libraries if you want or need to generate the Python libraries from source code.
-You will notice that the C SDKs are brought in as submodules to the current repository.
-In order to setup your development environment to build the C binaries make sure all dependencies are installed before building the SDK. 
-
-- You can use apt-get to install the right packages:
-  ```
-  sudo apt-get update
-  sudo apt-get install -y git cmake build-essential curl libcurl4-openssl-dev libssl-dev uuid-dev
-  ```
-
-- Verify that CMake is at least version **2.8.12**:
-  ```
-  cmake --version
-  ```
-
-- Verify that gcc is at least version **4.4.7**:
-  ```
-  gcc --version
-  ```
-
-### Compile the Python modules
-The Python iothub_client and iothub_service_client modules support python versions 2.7.x, 3.4.x or 3.5.x. Know the appropriate version you would like to build the library with for the following instructions.
-
-1. Clone the Azure IoT SDK for Python: https://github.com/Azure/azure-iot-sdk-python.git --recursive
-2. Ensure that the desired Python version (2.7.x, 3.4 or 3.5.x) is installed and active. Run `python --version` or `python3 --version` at the command line to check the version.
-3. Open a shell and navigate to the folder **build_all/linux** in your local copy of the repository.
-3. Run the `./setup.sh` script to install the prerequisite packages and the dependent libraries.
-    * Setup will default to python 2.7
-    * To setup dependencies for python 3.4 or 3.5, run `./setup.sh --python-version 3.4` or `./setup.sh --python-version 3.5` respectively
-4. Run the `./build.sh` script.
-    * Build will default to python 2.7
-    * To build with python 3.4 or 3.5, run `./build.sh --build-python 3.4` or `./build.sh --build-python 3.5` respectively 
-5. After a successful build, the `iothub_client.so` Python extension module is copied to the [**device/samples**][device-samples] and [**service/samples**][service-samples] folders. **Please notice that the `iothub_client.so` will be used in this client application**. 
-
-###Known build issues: 
-
-1.) On building the Python client library (`iothub_client.so`) on Linux devices that have less than **1GB** RAM, you may see build getting **stuck** at **98%** while building `iothub_client_python.cpp` as shown below
-
-``[ 98%] Building CXX object python/src/CMakeFiles/iothub_client_python.dir/iothub_client_python.cpp.o``
-
-If you run into this issue, check the **memory consumption** of the device using `free -m command` in another terminal window during that time. If you are running out of memory while compiling iothub_client_python.cpp file, you may have to temporarily increase the **swap space** to get more available memory to successfully build the Python client side device SDK library.
-
-## Step 4: Run your client application
+## Step 3: Download and setup referenced modules
 
 1. Clone the client application to local:
 
@@ -76,17 +31,33 @@ If you run into this issue, check the **memory consumption** of the device using
    
    cd ./iot-hub-python-raspberrypi-client-app
    ```
+   
+2. Because the Azure IoT SDKs for Python are wrappers on top of the [SDKs for C][azure-iot-sdk-c], you will need to compile the C libraries if you want or need to generate the Python libraries from source code.
 
-2. Install GPIO library:
    ```
-   sudo pip install RPi.GPIO
+   ./setup.sh
+   ./setup.sh [--python-version|-p] [2.7|3.4|3.5]
    ```
+   If you run script without parameter, the script will automatically detect the version of python installed (Search sequence 2.7->3.4->3.5). Or you can use a parameter to specify the python version.
+   
 
-3. Copy the `iothub_client.so` Python extension module generated in **Step 3** to this client application folder.
+    Known build issues: 
 
-4. Run the client application with root privilege, and you also need provide your Azure IoT hub device connection string, note your connection should be quoted in the command:
+    1.) On building the Python client library (`iothub_client.so`) on Linux devices that have less than **1GB** RAM, you may see build getting **stuck** at **98%** while building `iothub_client_python.cpp` as shown below
+
+    ``[ 98%] Building CXX object python/src/CMakeFiles/iothub_client_python.dir/iothub_client_python.cpp.o``
+
+    If you run into this issue, check the **memory consumption** of the device using `free -m command` in another terminal window during that time. If you are running out of memory while compiling iothub_client_python.cpp file, you may have to temporarily increase the **swap space** to get more available memory to successfully build the Python client side device SDK library.
+
+## Step 4: Run your client application
+
+Run the client application, and you need to provide your Azure IoT hub device connection string, note your connection string should be quoted in the command:
    ```
    python app.py '<your Azure IoT hub device connection string>'
+   ```
+If you use the python 3, then you can use the command below:
+   ```
+   python3 app.py '<your Azure IoT hub device connection string>'
    ```
 
 If the application works normally, then you will see the screen like this:
