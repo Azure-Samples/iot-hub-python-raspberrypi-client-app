@@ -15,15 +15,15 @@ class Telemetry:
 
     def __init__(self):
         self.telemetry = TelemetryClient(IKEY)
-        if os.path.exists("telemety.config"):
-            config_file = open("telemety.config", "r")
+        if os.path.exists("telemetry.config"):
+            config_file = open("telemetry.config", "r")
             if config_file.read() == "1":
                 self.enable_telemetry = True
             else:
                 self.enable_telemetry = False
         else:
             self.enable_telemetry = self._query_yes_no(PROMPT_TEXT)
-            config_file = open("telemety.config", "w")
+            config_file = open("telemetry.config", "w")
             if self.enable_telemetry:
                 config_file.write("1")
                 self.telemetry.track_event("yes", {"device": DEVICE, "language": LANGUAGE})

@@ -61,7 +61,7 @@ if len(sys.argv) < 2:
     sys.exit(0)
 
 def is_correct_connection_string():
-    m = re.search("HostName=.*;?DeviceId=.*?;SharedAccessKey=.*?", CONNECTION_STRING)
+    m = re.search("HostName=.*;DeviceId=.*;", CONNECTION_STRING)
     if m:
         return True
     else:
