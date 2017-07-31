@@ -13,6 +13,8 @@ import config as config
 from BME280SensorSimulator import BME280SensorSimulator
 import RPi.GPIO as GPIO
 from Adafruit_BME280 import *
+import re
+from telemetry import Telemetry
 
 # HTTP options
 # Because it can poll "after 9 seconds" polls will happen effectively
@@ -43,17 +45,34 @@ BLOB_CALLBACKS = 0
 TWIN_CALLBACKS = 0
 SEND_REPORTED_STATE_CALLBACKS = 0
 METHOD_CALLBACKS = 0
+EVENT_SUCCESS = "success"
+EVENT_FAILED = "failed"
 
 # chose HTTP, AMQP or MQTT as transport protocol
 PROTOCOL = IoTHubTransportProvider.MQTT
 
 # String containing Hostname, Device Id & Device Key in the format:
 # "HostName=<host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"
+telemetry = Telemetry()
+
 if len(sys.argv) < 2:
     print ( "You need to provide the device connection string as command line arguments." )
+    telemetry.send_telemetry_data(None, EVENT_FAILED, "Device connection string is not provided")
     sys.exit(0)
 
+def is_correct_connection_string():
+    m = re.search("HostName=.*;?DeviceId=.*?;SharedAccessKey=.*?", CONNECTION_STRING)
+    if m:
+        return True
+    else:
+        return False
+
 CONNECTION_STRING = sys.argv[1]
+
+if not is_correct_connection_string():
+    print ( "Device connection string is not correct." )
+    telemetry.send_telemetry_data(None, EVENT_FAILED, "Device connection string is not correct.")
+    sys.exit(0)
 
 MSG_TXT = "{\"deviceId\": \"Raspberry Pi - Python\",\"temperature\": %f,\"humidity\": %f}"
 
@@ -65,7 +84,7 @@ def receive_message_callback(message, counter):
     message_buffer = message.get_bytearray()
     size = len(message_buffer)
     print ( "Received Message [%d]:" % counter )
-    print ( "    Data: <<<%s>>> & Size=%d" % (message_buffer[:size].decode('utf-8'), size) )
+    print ( "    Data: <<<%s>>> & Size=%d" % (message_buffer[:size].decode("utf-8"), size) )
     map_properties = message.properties()
     key_value_pair = map_properties.get_internals()
     print ( "    Properties: %s" % key_value_pair )
@@ -177,6 +196,7 @@ def iothub_client_sample_run():
         else:
             sensor = BME280SensorSimulator()
 
+        telemetry.send_telemetry_data(parse_iot_hub_name(), EVENT_SUCCESS, "IoT hub connection is established")
         while True:
             global MESSAGE_COUNT,MESSAGE_SWITCH
             if MESSAGE_SWITCH:
@@ -194,7 +214,7 @@ def iothub_client_sample_run():
                 message.correlation_id = "correlation_%d" % MESSAGE_COUNT
                 # optional: assign properties
                 prop_map = message.properties()
-                prop_map.add("temperatureAlert", 'true' if temperature > TEMPERATURE_ALERT else 'false')
+                prop_map.add("temperatureAlert", "true" if temperature > TEMPERATURE_ALERT else "false")
 
                 client.send_event_async(message, send_confirmation_callback, MESSAGE_COUNT)
                 print ( "IoTHubClient.send_event_async accepted message [%d] for transmission to IoT Hub." % MESSAGE_COUNT )
@@ -206,6 +226,7 @@ def iothub_client_sample_run():
 
     except IoTHubError as iothub_error:
         print ( "Unexpected error %s from IoTHub" % iothub_error )
+        telemetry.send_telemetry_data(parse_iot_hub_name(), EVENT_FAILED, "Unexpected error %s from IoTHub" % iothub_error)
         return
     except KeyboardInterrupt:
         print ( "IoTHubClient sample stopped" )
@@ -222,8 +243,11 @@ def usage():
     print ( "    protocol        : <amqp, amqp_ws, http, mqtt, mqtt_ws>" )
     print ( "    connectionstring: <HostName=<host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>>" )
 
+def parse_iot_hub_name():
+    m = re.search("HostName=(.*?)\.", CONNECTION_STRING)
+    return m.group(1)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print ( "\nPython %s" % sys.version )
     print ( "IoT Hub Client for Python" )
 
