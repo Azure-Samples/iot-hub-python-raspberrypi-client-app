@@ -8,8 +8,8 @@ This repo contains a python application that runs on Raspberry Pi 3 with a BME28
 ### Enable SSH on your Pi
 Follow [this page](https://www.raspberrypi.org/documentation/remote-access/ssh/) to enable SSH on your Pi.
 
-### Enable SPI and I2C on your Pi
-Follow [this page](https://www.raspberrypi.org/documentation/configuration/raspi-config.md) to enable SPI on your Pi
+### Enable I2C on your Pi
+Follow [this page](https://www.raspberrypi.org/documentation/configuration/raspi-config.md) to enable I2C on your Pi
 
 ## Step 2: Connect your sensor with your Pi
 ### Connect with a physical BME280 sensor and LED
