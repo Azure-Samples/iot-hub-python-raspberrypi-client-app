@@ -40,8 +40,8 @@ You can use the application to simulate temperature&humidity data and send to yo
    sudo chmod u+x setup.sh
    sudo ./setup.sh
    ```
-   If you run script without parameter, the script will automatically detect the version of python installed (Search sequence 2.7->3.4->3.5). Or you can use a parameter to specify the python version like this: **sudo ./setup.sh [--python-version|-p] [2.7|3.4|3.5]**
-   
+   In the above script, we run **./setup.sh** without parameter, so the shell will automatically detect and use the version of python installed (Search sequence 2.7->3.4->3.5). Alternatively, you can use a parameter to specify the python version which you want to use like this: **sudo ./setup.sh [--python-version|-p] [2.7|3.4|3.5]**
+
 
     Known build issues: 
 
