@@ -123,7 +123,15 @@ fi
 checkpython $INPUT_PYTHON_VERSION
 
 sudo apt-get update
-sudo apt-get install -y git cmake build-essential curl libcurl4-openssl-dev libssl-dev uuid-dev python-pip python-dev python-smbus
+
+sudo apt-get install -y cmake build-essential curl libcurl4-openssl-dev libssl-dev uuid-dev python-dev python-smbus
+
+if [[ $PYTHON_VERSION == 2.7 ]]; then
+    sudo apt-get install -y python-pip
+else
+    sudo apt-get install -y python3-pip
+fi
+
 git clone https://github.com/Azure/azure-iot-sdk-python.git --recursive
 cd azure-iot-sdk-python/build_all/linux
 ./setup.sh --python-version $PYTHON_VERSION

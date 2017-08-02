@@ -27,18 +27,20 @@ You can use the application to simulate temperature&humidity data and send to yo
 1. Clone the client application to local:
 
    ```
-   git clone https://github.com/Azure-Samples/iot-hub-python-raspberrypi-client-app.git
+   sudo apt-get install git-core
+
+   git clone https://github.com/Azure-Samples/iot-hub-python-raspberrypi-client-app.git   
    
-   cd ./iot-hub-python-raspberrypi-client-app
    ```
    
 2. Because the Azure IoT SDKs for Python are wrappers on top of the [SDKs for C][azure-iot-sdk-c], you will need to compile the C libraries if you want or need to generate the Python libraries from source code.
 
    ```
-   ./setup.sh
-   ./setup.sh [--python-version|-p] [2.7|3.4|3.5]
+   cd ./iot-hub-python-raspberrypi-client-app
+   sudo chmod u+x setup.sh
+   sudo ./setup.sh
    ```
-   If you run script without parameter, the script will automatically detect the version of python installed (Search sequence 2.7->3.4->3.5). Or you can use a parameter to specify the python version.
+   If you run script without parameter, the script will automatically detect the version of python installed (Search sequence 2.7->3.4->3.5). Or you can use a parameter to specify the python version like this: **sudo ./setup.sh [--python-version|-p] [2.7|3.4|3.5]**
    
 
     Known build issues: 
