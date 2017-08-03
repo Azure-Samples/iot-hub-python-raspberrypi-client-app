@@ -1,6 +1,7 @@
 # coding: utf-8
 from applicationinsights import TelemetryClient
 import sys,hashlib,os.path,re, uuid
+import platform
 
 IKEY = "0823bae8-a3b8-4fd5-80e5-f7272a2377a9"
 LANGUAGE = "Python"
@@ -37,7 +38,9 @@ class Telemetry:
             hash_mac = self._get_mac_hash()
             hash_iot_hub_name = hashlib.sha256(iot_hub_name.encode("utf-8")).hexdigest()
             self.telemetry.track_event(event, {"iothub": hash_iot_hub_name, "message": message,
-                                          "language": LANGUAGE, "device": DEVICE, "mac": hash_mac})
+                                          "language": LANGUAGE, "device": DEVICE, "mac": hash_mac,
+                                          "osType": platform.system(), "osPlatform": platform.dist()[0],
+                                          "osRelease": platform.dist()[1]})
             self.telemetry.flush()
 
     def _get_mac_hash(self):
