@@ -152,6 +152,7 @@ def blob_upload_conf_callback(result, user_context):
 def iothub_client_init():
     # prepare iothub client
     client = IoTHubClient(CONNECTION_STRING, PROTOCOL)
+    client.set_option("product_info", "HappyPath_RaspberryPi-Python")
     if client.protocol == IoTHubTransportProvider.HTTP:
         client.set_option("timeout", TIMEOUT)
         client.set_option("MinimumPollingTime", MINIMUM_POLLING_TIME)
@@ -191,7 +192,7 @@ def iothub_client_sample_run():
             reported_state = "{\"newState\":\"standBy\"}"
             client.send_reported_state(reported_state, len(reported_state), send_reported_state_callback, SEND_REPORTED_STATE_CONTEXT)
 
-        if not config.SIMULATED_DATA:        
+        if not config.SIMULATED_DATA:
             sensor = BME280(address = config.I2C_ADDRESS)
         else:
             sensor = BME280SensorSimulator()
