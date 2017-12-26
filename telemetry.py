@@ -10,7 +10,9 @@ PROMPT_TEXT = "\nMicrosoft would like to collect data about how users use Azure 
     "samples and some problems they encounter. Microsoft uses this information to improve "\
     "our tooling experience. Participation is voluntary and when you choose to participate " \
     "your device automatically sends information to Microsoft about how you use Azure IoT "\
-    "samples. \n\nSelect y to enable data collection (y/n, default is y) "
+    "samples. If you want to change this setting after first time, please delete the "\
+    "telemetry.config file and restart the program. "\
+    "\n\nSelect y to enable data collection (y/n, default is y). "
 
 class Telemetry:
     def __init__(self):
@@ -30,6 +32,7 @@ class Telemetry:
                     self.telemetry.track_event("yes", {"device": DEVICE, "language": LANGUAGE})
                 else:
                     config_file.write("0")
+                    self.telemetry.context.location.ip = "0.0.0.0"
                     self.telemetry.track_event("no", {"device": DEVICE, "language": LANGUAGE})
             self.telemetry.flush()
         except:
